@@ -3,8 +3,10 @@ import re
 import json
 import os
 from PIL import Image, ImageTk
-from python.login_and_main.main import start_casino  # Importa la funzione per avviare il casinò
-
+from main import start_casino  # Importa la funzione per avviare il casinò
+pathFile = os.path.dirname(os.path.abspath(__file__))  # Percorso della cartella corrente
+json_path = os.path.join(pathFile, "users.json") 
+print(json_path)
 # Dimensioni finestra Login/Sign Up
 def window_login_geometry(window):
     screen_width = window.winfo_screenwidth()
@@ -19,7 +21,8 @@ def image_label_logo(root):
     frame = ctk.CTkFrame(root, height=200, width=200, fg_color="transparent")
     frame.pack(pady=20)
     
-    img_path = "scienere.jpeg"
+    img_path =os.path.join(pathFile, "./immagini/scienere.jpeg") 
+    print(img_path)
     image = Image.open(img_path)
     image = image.resize((200, 200))
     photo = ImageTk.PhotoImage(image)
@@ -181,8 +184,8 @@ def create_login(root, visitor_log_window, registration_status):
 
     def is_email_registered(email):
         try:
-            if os.path.exists("users.json"):
-                with open("users.json", "r") as file:
+            if os.path.exists(json_path):
+                with open(json_path, "r") as file:
                     users = json.load(file)
                     for user in users:
                         if user["email"] == email and user["status"] == "user":
@@ -210,7 +213,7 @@ def create_login(root, visitor_log_window, registration_status):
         
         user_data = {"email": email, "password": password, "status": "user"}
         try:
-            if not os.path.exists("users.json"):
+            if not os.path.exists(json_path):
                 with open("users.json", "w") as file:
                     json.dump([user_data], file, indent=4)
             else:
@@ -239,7 +242,7 @@ def create_login(root, visitor_log_window, registration_status):
     signup_button.pack(pady=1)
     
 def image_side(frame):
-    img_path = "scienere.jpeg"
+    img_path =os.path.join(pathFile, "./immagini/scienere.jpeg") 
     image = Image.open(img_path)
     image = image.resize((500, 600))
     photo = ImageTk.PhotoImage(image)

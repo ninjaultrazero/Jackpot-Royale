@@ -44,7 +44,6 @@ roulette_img = None
 # Caricamento immagine della roulette e ridimensionamento
 
 image_path = os.path.join(pathFile, "ruota.png")
-print(image_path)
 if os.path.exists(image_path):
     original_image = Image.open(image_path)
     resized_image = original_image.resize((300, 300), Image.LANCZOS)
