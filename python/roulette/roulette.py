@@ -5,11 +5,12 @@ import os
 import pygame
 from PIL import Image, ImageTk
 
+pathFile = os.path.dirname(os.path.abspath(__file__))  # Percorso della cartella corrente
 # Inizializza Pygame per il suono
 pygame.mixer.init()
 
 def play_sound():
-    sound_path = "suono.mp3"  # Assicurati di avere un file audio adeguato
+    sound_path = os.path.join(pathFile, "suono.mp3")  # Assicurati di avere un file audio adeguato
     if os.path.exists(sound_path):
         pygame.mixer.music.load(sound_path)
         pygame.mixer.music.play()
@@ -41,7 +42,9 @@ resized_image = None
 roulette_img = None
 
 # Caricamento immagine della roulette e ridimensionamento
-image_path = "imgrol.png"
+
+image_path = os.path.join(pathFile, "ruota.png")
+print(image_path)
 if os.path.exists(image_path):
     original_image = Image.open(image_path)
     resized_image = original_image.resize((300, 300), Image.LANCZOS)
