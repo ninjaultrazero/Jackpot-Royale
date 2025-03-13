@@ -2,7 +2,7 @@ import customtkinter as ctk
 from PIL import Image, ImageTk
 import os
 import random
-
+import subprocess
 pathFile = os.path.dirname(os.path.abspath(__file__))  # Percorso della cartella corrente
 
 # Classe per l'animazione delle monete che cadono
@@ -36,11 +36,8 @@ class FallingCoin:
 		self.move_coins()  # Avvia il movimento delle monete
 
 def open_roulette_window():
-	roulette_window = ctk.CTkToplevel()
-	roulette_window.title("Roulette")
-	roulette_window.geometry("600x500")
-	label = ctk.CTkLabel(roulette_window, text="Benvenuto alla Roulette!", font=("Helvetica", 18, "bold"))
-	label.pack(pady=50)
+	subprocess.run(['python', './roulette.py'])
+
 
 
 

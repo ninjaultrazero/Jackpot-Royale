@@ -49,11 +49,11 @@ class BlackjackGame:
 
     def load_deck(self):
         # Caricamento delle immagini delle carte
-        suits = {'CUORI': 'C', 'FIORI': 'F', 'PICCHE': 'P', 'QUADRI': 'Q'}
-        ranks = [str(i) for i in range(1, 11)] + ['J', 'Q', 'K']
+        suits = ['CUORI', 'FIORI', 'PICCHE', 'QUADRI']
+        ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
         
         # Costruzione del mazzo con il percorso delle immagini
-        return [os.path.join("img carte", suit, f"{rank}{suits[suit]}.png") for suit in suits for rank in ranks]
+        return [f"img carte/{suit}/{rank}{suit[0]}.png" for suit in suits for rank in ranks]
 
     def update_display(self):
         # Rimuove le vecchie carte dai frame
@@ -122,7 +122,7 @@ class BlackjackGame:
         value = 0
         ace_count = 0
         for card in hand:
-            rank = card.split('_')[0]  # Estrai il rango (ad esempio, "2", "J", "K")
+            rank = card.split('/')[-1][0]  # Estrai il rango (ad esempio, "2", "J", "K")
             if rank in ['J', 'Q', 'K']:
                 value += 10
             elif rank == 'A':

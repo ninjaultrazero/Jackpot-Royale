@@ -87,16 +87,18 @@ selected_numbers = {}
 def place_bet(num):
     global selected_numbers, saldo, puntata
     bet_amount = selected_bet.get()
-    if saldo >= bet_amount:
-        saldo -= bet_amount
-        puntata += bet_amount
-        selected_numbers[num] = selected_numbers.get(num, 0) + bet_amount
-        saldo_label.config(text=f"Saldo: {saldo} FUN")
-        puntata_label.config(text=f"Puntata totale: {puntata} FUN")
-        # Evidenzia il bottone selezionato
-        for btn in number_buttons:
-            if btn["text"] == str(num):
-                btn.config(bg="green")
+    if len(selected_numbers)<17:
+        if saldo >= bet_amount:
+            saldo -= bet_amount
+            puntata += bet_amount
+            selected_numbers[num] = selected_numbers.get(num, 0) + bet_amount
+            saldo_label.config(text=f"Saldo: {saldo} FUN")
+            puntata_label.config(text=f"Puntata totale: {puntata} FUN")
+            # Evidenzia il bottone selezionato
+            for btn in number_buttons:
+                if btn["text"] == str(num):
+                    btn.config(bg="green")
+                    btn.config(state="disabled")
     else:
         messagebox.showwarning("Saldo Insufficiente", "Non hai abbastanza FUN per piazzare questa puntata!")
 
@@ -249,6 +251,10 @@ def check_winnings(num):
     odd_button.config(bg="gray")
     low_button.config(bg="gray")
     high_button.config(bg="gray")
+
+    for btn in number_buttons:
+        btn.config(state="active")
+        
 
 # Pulsanti di controllo
 button_frame = tk.Frame(left_frame, bg="black")
