@@ -36,7 +36,7 @@ class FallingCoin:
 		self.move_coins()  # Avvia il movimento delle monete
 
 def open_roulette_window():
-	subprocess.run(['python', './roulette.py'])
+	subprocess.run(['python', '../roulette/roulette.py'])
 
 
 
