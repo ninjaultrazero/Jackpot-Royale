@@ -39,22 +39,13 @@ def open_roulette_window():
 	roulette_path=os.path.join(pathFile, "../roulette/roulette.py")
 	subprocess.run(['python', roulette_path])
 
-
-
-
 def open_slot_machine_window():
-	slot_window = ctk.CTkToplevel()
-	slot_window.title("Slot Machine")
-	slot_window.geometry("600x500")
-	label = ctk.CTkLabel(slot_window, text="Benvenuto alla Slot Machine!", font=("Helvetica", 18, "bold"))
-	label.pack(pady=50)
+	roulette_path=os.path.join(pathFile, "../slot_machine/slot.py")
+	subprocess.run(['python', roulette_path])
 
 def open_blackjack_window():
-	blackjack_window = ctk.CTkToplevel()
-	blackjack_window.title("Blackjack")
-	blackjack_window.geometry("600x500")
-	label = ctk.CTkLabel(blackjack_window, text="Benvenuto al Blackjack!", font=("Helvetica", 18, "bold"))
-	label.pack(pady=50)
+	roulette_path=os.path.join(pathFile, "../black_jack/blackJack.py")
+	subprocess.run(['python', roulette_path])
 
 def start_casino():
 	# Configurazione finestra principale
