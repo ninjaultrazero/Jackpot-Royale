@@ -68,6 +68,7 @@ def spin_reels():
         time.sleep(delay)
         spins[index] = 0
 
+
     for i in range(5):
         threading.Thread(target=stop_reel, args=(i, stop_times[i]), daemon=True).start()
 
