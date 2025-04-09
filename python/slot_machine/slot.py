@@ -1,11 +1,11 @@
 import customtkinter as ctk
-from customtkinter import CTkImage
 import pygame
 import random
 from PIL import Image
 import threading
 import time
 import os
+from customtkinter import CTkImage
 
 # Init Pygame
 pygame.init()
@@ -18,22 +18,25 @@ images_path = os.path.join(pathFile, "./immagini")
 # Sounds
 spin_sound = pygame.mixer.Sound(os.path.join(pathFile, "spin.mp3"))
 win_sound = pygame.mixer.Sound(os.path.join(pathFile, "win.mp3"))
+spin_sound.set_volume(0.5)
+win_sound.set_volume(0.5)
 
 # Load image symbols
 symbol_files = ["cherry.png", "bell.png", "lemon.png", "star.png", "watermelon.png", "seven.png", "diamond.png"]
 symbols_images = [Image.open(os.path.join(images_path, f)).resize((60, 60)) for f in symbol_files]
 symbols = [CTkImage(light_image=img, size=(60, 60)) for img in symbols_images]
 
-# UI
+# UI setup
 root = ctk.CTk()
 root.title("Slot Machine")
 root.geometry("800x600")
 ctk.set_appearance_mode("dark")
 
-# Main frame
+# Main frame (using grid for both reels and lever)
 main_frame = ctk.CTkFrame(root)
-main_frame.pack(pady=20)
+main_frame.grid(row=0, column=0, padx=20, pady=20)
 
+# Reels frame (managed by grid())
 reels_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
 reels_frame.grid(row=0, column=0, padx=20)
 
@@ -56,7 +59,7 @@ running = False
 def spin_reels():
     global running
     running = True
-    spin_sound.play(0, 10)
+    spin_sound.play(0,0)
 
     spins = [random.randint(10, 20) for _ in range(5)]
     stop_times = [1, 2, 3, 4, 5]
@@ -98,57 +101,22 @@ def check_win():
 
 # Result label
 result_label = ctk.CTkLabel(root, text="", font=("Arial", 20))
-result_label.pack(pady=10)
+result_label.grid(row=1, column=0, pady=10)
 
 # Global lever state
-lever_dragging = False
-
-# Lever canvas
-lever_canvas = ctk.CTkCanvas(root, width=100, height=200, bg="gray20", highlightthickness=0)
-lever_canvas.place(x=500, y=100)
-lever_canvas.create_line(50, 0, 50, 200, fill="silver", width=8)
-lever_knob = lever_canvas.create_oval(35, 80, 65, 110, fill="red")
-
-# Lever drag
-
-def on_lever_drag(event):
-    global lever_dragging
-    lever_dragging = True
-    y = min(max(event.y, 80), 170)
-    lever_canvas.coords(lever_knob, 35, y, 65, y + 30)
-
-# Lever release
-
-def on_lever_release(event):
-    global lever_dragging
-    lever_dragging = False
-    coords = lever_canvas.coords(lever_knob)
-    if coords:
-        _, _, _, knob_bottom = coords
-        if knob_bottom >= 170:
-            threading.Thread(target=spin_reels, daemon=True).start()
-        reset_lever()
-
-# Reset lever
+# Fallback spin button (optional)
+def lever_pulled(event):
+    threading.Thread(target=spin_reels, daemon=True).start()
 
 def reset_lever():
-    def move_knob(y):
-        lever_canvas.coords(lever_knob, 35, y, 65, y + 30)
-        lever_canvas.update()
+    lever.set(100)  # Reset the lever position to the top (maximum value)
 
-    current_y = int(lever_canvas.coords(lever_knob)[1])
-    for y in range(current_y, 80, -2):
-        # Schedule the knob movement to be handled on the main thread
-        lever_canvas.after(10, move_knob, y)
-        time.sleep(0.01)  # You can control the speed here
+# Lever (placed on the right side of the reels using grid)
+lever_frame = ctk.CTkFrame(main_frame)
+lever_frame.grid(row=0, column=1, padx=20, pady=20)
 
-
-lever_canvas.tag_bind(lever_knob, "<B1-Motion>", on_lever_drag)
-lever_canvas.tag_bind(lever_knob, "<ButtonRelease-1>", on_lever_release)
-
-# Fallback spin button
-spin_button = ctk.CTkButton(root, text="Spin", command=lambda: threading.Thread(target=spin_reels, daemon=True).start())
-spin_button.pack(pady=10)
+lever = ctk.CTkSlider(lever_frame, from_=0, to=100, command=lever_pulled, orientation="vertical")
+lever.pack(expand=True, fill="y")
 
 # Main loop
 root.mainloop()
