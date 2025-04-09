@@ -8,5 +8,10 @@
         "email": "miki@gmail.com",
         "password": "1234",
         "status": "user"
+    },
+    {
+        "email": "hgfds@gmail.com",
+        "password": "hdsh",
+        "status": "user"
     }
 ]
