@@ -2,8 +2,24 @@ import customtkinter as ctk
 import os
 import random
 from tkinter import PhotoImage
+import json
 
 pathFile = os.path.dirname(os.path.abspath(__file__))  # Percorso della cartella corrente
+
+# Funzione per leggere il saldo dal file JSON
+def get_balance():
+    with open('../login_and_main/users.json', 'r') as file:
+        data = json.load(file)
+        return data.get('balance', 0)
+
+# Funzione per aggiornare il saldo nel file JSON
+def update_balance(new_balance):
+    with open('../login_and_main/users.json', 'r+') as file:
+        data = json.load(file)
+        data['balance'] = new_balance
+        file.seek(0)
+        json.dump(data, file, indent=4)
+        file.truncate()
 
 # Classe per il gioco Blackjack
 class BlackjackGame:
@@ -11,10 +27,13 @@ class BlackjackGame:
 		self.root = root
 		self.root.title("Blackjack")
 		
+		# Importa la variabile globale per il saldo delle monete
+		global coin_balance
+		self.player_credit = get_balance()
+		
 		self.player_hand = []
 		self.dealer_hand = []
 		self.deck = []
-		self.player_credit = 100  # Credito iniziale del giocatore
 		
 		self.create_ui()
 		self.start_game()

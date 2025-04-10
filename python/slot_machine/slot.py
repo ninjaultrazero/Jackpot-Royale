@@ -6,6 +6,29 @@ import threading
 import time
 import os
 from customtkinter import CTkImage
+import json
+
+# Importa la variabile globale per il saldo delle monete dal main
+import sys
+sys.path.append('../login_and_main')
+
+# Funzione per leggere il saldo dal file JSON
+def get_balance():
+    with open('../login_and_main/users.json', 'r') as file:
+        data = json.load(file)
+        return data.get('balance', 0)
+
+# Funzione per aggiornare il saldo nel file JSON
+def update_balance(new_balance):
+    with open('../login_and_main/users.json', 'r+') as file:
+        data = json.load(file)
+        data['balance'] = new_balance
+        file.seek(0)
+        json.dump(data, file, indent=4)
+        file.truncate()
+
+# Leggi il saldo iniziale
+coin_balance = get_balance()
 
 # Init Pygame
 pygame.init()
@@ -118,6 +141,12 @@ lever_frame.grid(row=0, column=1, padx=20, pady=20)
 
 lever = ctk.CTkSlider(lever_frame, from_=0, to=100, command=lever_pulled, orientation="vertical")
 lever.pack(expand=True, fill="y")
+
+# Aggiunta di un frame rettangolare per visualizzare il numero di monete
+coin_frame = ctk.CTkFrame(root, fg_color="black", corner_radius=10, border_width=2, border_color="gold")
+coin_frame.place(relx=0.95, rely=0.05, anchor="ne")
+coin_label = ctk.CTkLabel(coin_frame, text=f"\U0001F4B0 {coin_balance}", font=("Helvetica", 18, "bold"), text_color="gold")
+coin_label.pack(padx=10, pady=5)
 
 # Main loop
 root.mainloop()

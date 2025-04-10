@@ -2,16 +2,19 @@
     {
         "email": "luigi@gmail.com",
         "password": "miki",
-        "status": "user"
+        "status": "user",
+        "balance": 1000
     },
     {
         "email": "miki@gmail.com",
         "password": "1234",
-        "status": "user"
+        "status": "user",
+        "balance": 1000
     },
     {
         "email": "hgfds@gmail.com",
         "password": "hdsh",
-        "status": "user"
+        "status": "user",
+        "balance": 1000
     }
 ]
