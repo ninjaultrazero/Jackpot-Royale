@@ -262,6 +262,7 @@ def check_winnings(num):
 
 	for btn in number_buttons:
 		btn.config(state="active")
+set_coins(saldo)  # Aggiorna il saldo nel file JSON
 		
 
 # Pulsanti di controllo
