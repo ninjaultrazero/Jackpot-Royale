@@ -10,25 +10,10 @@ import json
 
 # Importa la variabile globale per il saldo delle monete dal main
 import sys
-sys.path.append('../login_and_main')
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'login_and_main')))
 
-# Funzione per leggere il saldo dal file JSON
-def get_balance():
-    with open('../login_and_main/users.json', 'r') as file:
-        data = json.load(file)
-        return data.get('balance', 0)
-
-# Funzione per aggiornare il saldo nel file JSON
-def update_balance(new_balance):
-    with open('../login_and_main/users.json', 'r+') as file:
-        data = json.load(file)
-        data['balance'] = new_balance
-        file.seek(0)
-        json.dump(data, file, indent=4)
-        file.truncate()
-
-# Leggi il saldo iniziale
-coin_balance = get_balance()
+from coin_manager import get_coins, set_coins
+coin_balance = get_coins()  # Ottieni il saldo iniziale delle monete
 
 # Init Pygame
 pygame.init()

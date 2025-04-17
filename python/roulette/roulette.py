@@ -5,23 +5,11 @@ import os
 import pygame
 from PIL import Image, ImageTk
 import json
-
+import sys
 pathFile = os.path.dirname(os.path.abspath(__file__))  # Percorso della cartella corrente
-# Funzione per leggere il saldo dal file JSON
-def get_balance():
-	with open('users.json', 'r') as file:
-		data = json.load(file)
-		return data.get('balance', 0)
-# Funzione per aggiornare il saldo nel file JSON
-def update_balance(new_balance):
-	with open('users.json', 'r+') as file:
-		data = json.load(file)
-		data['balance'] = new_balance
-		file.seek(0)
-		json.dump(data, file, indent=4)
-		file.truncate()
-coin_balance = get_balance()  # Leggi il saldo iniziale
-
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'login_and_main')))
+from coin_manager import get_coins, set_coins
+saldo = get_coins()  # Ottieni il saldo iniziale delle monete
 # Inizializza Pygame per il suono
 pygame.mixer.init()
 
@@ -75,7 +63,6 @@ details_frame.pack(side="top", padx=20, pady=20)
 # Importa la variabile globale per il saldo delle monete
 
 
-saldo = coin_balance
 puntata = 0
 
 saldo_label = tk.Label(details_frame, text=f"Saldo: {saldo} FUN", font=("Helvetica", 16), fg="white", bg="black")

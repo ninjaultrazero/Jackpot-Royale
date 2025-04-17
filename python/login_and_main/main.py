@@ -6,25 +6,8 @@ import subprocess
 import json
 
 pathFile = os.path.dirname(os.path.abspath(__file__))  # Percorso della cartella corrente
-
-# Variabile globale per il saldo delle monete
-global coin_balance
-coin_balance = 1000
-
-# Funzione per leggere il saldo dal file JSON
-def get_balance():
-    with open('users.json', 'r') as file:
-        data = json.load(file)
-        return data.get('balance', 0)
-
-# Funzione per aggiornare il saldo nel file JSON
-def update_balance(new_balance):
-    with open('users.json', 'r+') as file:
-        data = json.load(file)
-        data['balance'] = new_balance
-        file.seek(0)
-        json.dump(data, file, indent=4)
-        file.truncate()
+from coin_manager import get_coins, add_coins
+coins=get_coins()  # Ottieni il saldo iniziale delle monete
 
 # Classe per l'animazione delle monete che cadono
 class FallingCoin:
