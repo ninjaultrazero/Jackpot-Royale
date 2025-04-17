@@ -1,5 +1,0 @@
-{
-    "python.analysis.extraPaths": [
-        "./python/login_and_main"
-    ]
-}
