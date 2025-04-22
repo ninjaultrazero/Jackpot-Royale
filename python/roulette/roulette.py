@@ -8,7 +8,7 @@ import json
 import sys
 pathFile = os.path.dirname(os.path.abspath(__file__))  # Percorso della cartella corrente
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'login_and_main')))
-from coin_manager import get_balance, set_balance
+from coin_manager import get_balance, remove_coins
 
 saldo = get_balance()  # Ottieni il saldo iniziale delle monete
 # Inizializza Pygame per il suono
@@ -239,6 +239,7 @@ def check_winnings(num):
 	else:
 		risultato_label.config(text="Sconfitta! Non hai vinto questa volta!", fg="red")
 
+	remove_coins(saldo)  # Aggiorna il saldo nel file JSON
 	# Reset delle scommesse
 	puntata = 0
 	selected_numbers = {}
@@ -263,7 +264,6 @@ def check_winnings(num):
 
 	for btn in number_buttons:
 		btn.config(state="active")
-set_balance(saldo)  # Aggiorna il saldo nel file JSON
 		
 
 # Pulsanti di controllo
