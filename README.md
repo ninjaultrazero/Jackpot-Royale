@@ -27,7 +27,8 @@ pip install -r requirements.txt
 
 ### 4⃣ Avvia il programma
 ```bash
-python main.py
+cd python\login_and_main
+python login.py
 ```
 
 ---
