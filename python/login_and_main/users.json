@@ -12,21 +12,9 @@
         "balance": 1000
     },
     {
-        "email": "hgfds@gmail.com",
-        "password": "hdsh",
-        "status": "user",
-        "balance": 1000
-    },
-    {
         "email": "pako@gmail.com",
         "password": "123456",
         "status": "user",
         "balance": 1000
-    },
-    {
-        "email": "alice@gmail.com",
-        "password": "ciao12",
-        "status": "user",
-        "balance": 1000
-    }
+    }  
 ]
