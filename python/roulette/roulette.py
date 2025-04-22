@@ -6,63 +6,60 @@ import pygame
 from PIL import Image, ImageTk
 import json
 import sys
-pathFile = os.path.dirname(os.path.abspath(__file__))  # Percorso della cartella corrente
+
+pathFile = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'login_and_main')))
 from coin_manager import get_balance, remove_coins
 
-saldo = get_balance()  # Ottieni il saldo iniziale delle monete
-# Inizializza Pygame per il suono
+saldo = get_balance()
 pygame.mixer.init()
+roulette_numbers = [
+    0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6,
+    27, 13, 36, 11, 30, 8, 23, 10, 5, 24,
+    16, 33, 1, 20, 14, 31, 9, 22, 18, 29,
+    7, 28, 12, 35, 3, 26
+]
+black_numbers = {15, 4, 2, 17, 6, 13, 11, 8, 10, 24, 33, 20, 31, 22, 29, 28, 35, 26}
+red_numbers = {32, 19, 21, 25, 34, 27, 36, 30, 23, 5, 16, 1, 14, 9, 18, 7, 12, 3}
 
 def play_sound():
-	sound_path = os.path.join(pathFile, "suono.mp3")  # Assicurati di avere un file audio adeguato
-	if os.path.exists(sound_path):
-		pygame.mixer.music.load(sound_path)
-		pygame.mixer.music.play()
-	else:
-		messagebox.showwarning("Attenzione", "Suono non trovato. Il gioco continuerà senza audio.")
+    sound_path = os.path.join(pathFile, "suono.mp3")
+    if os.path.exists(sound_path):
+        pygame.mixer.music.load(sound_path)
+        pygame.mixer.music.play()
+    else:
+        messagebox.showwarning("Attenzione", "Suono non trovato. Il gioco continuer\u00e0 senza audio.")
 
-# Finestra principale
 root = tk.Tk()
 root.title("Roulette Game")
 root.geometry("1280x800")
 root.configure(bg="black")
 
-# Contenitore principale
 main_frame = tk.Frame(root, bg="black")
 main_frame.pack(fill="both", expand=True)
 
-# Tavolo da gioco e tabella
 left_frame = tk.Frame(main_frame, bg="black")
 left_frame.pack(side="left", padx=20, pady=20)
 
-# Tavolo da gioco (Roulette)
 canvas = tk.Canvas(left_frame, width=400, height=400, bg="green")
 canvas.pack()
 
-# Variabili globali
 roulette_display = None
 original_image = None
 resized_image = None
 roulette_img = None
 
-# Caricamento immagine della roulette e ridimensionamento
-
 image_path = os.path.join(pathFile, "ruota.png")
 if os.path.exists(image_path):
-	original_image = Image.open(image_path)
-	resized_image = original_image.resize((300, 300), Image.LANCZOS)
-	roulette_img = ImageTk.PhotoImage(resized_image)
-	roulette_display = canvas.create_image(200, 200, image=roulette_img)
+    original_image = Image.open(image_path)
+    resized_image = original_image.resize((300, 300), Image.LANCZOS)
+    roulette_img = ImageTk.PhotoImage(resized_image)
+    roulette_display = canvas.create_image(200, 200, image=roulette_img)
 else:
-	messagebox.showwarning("Attenzione", "Immagine della roulette non trovata. Il gioco continuerà senza di essa.")
+    messagebox.showwarning("Attenzione", "Immagine della roulette non trovata.")
 
-# Sezione saldo e puntate (spostata in alto a destra)
 details_frame = tk.Frame(main_frame, bg="black")
 details_frame.pack(side="top", padx=20, pady=20)
-
-# Importa la variabile globale per il saldo delle monete
-
 
 puntata = 0
 
@@ -72,7 +69,6 @@ saldo_label.pack()
 puntata_label = tk.Label(details_frame, text=f"Puntata totale: {puntata} FUN", font=("Helvetica", 16), fg="white", bg="black")
 puntata_label.pack()
 
-# Sezione selezione puntata (fiches)
 bet_frame = tk.Frame(left_frame, bg="black")
 bet_frame.pack(pady=10)
 
@@ -80,11 +76,9 @@ bet_options = [1, 5, 10, 25, 50, 100]
 selected_bet = tk.IntVar(value=bet_options[0])
 
 for bet in bet_options:
-	bet_button = tk.Button(bet_frame, text=f"{bet} FUN", width=6, bg="gray", fg="white",
-						   command=lambda b=bet: selected_bet.set(b))
-	bet_button.pack(side="left", padx=5)
+    bet_button = tk.Button(bet_frame, text=f"{bet} FUN", width=6, bg="gray", fg="white", command=lambda b=bet: selected_bet.set(b))
+    bet_button.pack(side="left", padx=5)
 
-# Creazione tabellone numerico
 right_frame = tk.Frame(main_frame, bg="black")
 right_frame.pack(side="right", padx=20, pady=20)
 
@@ -93,44 +87,49 @@ table_frame.pack()
 
 selected_numbers = {}
 
-def place_bet(num):
-	global selected_numbers, saldo, puntata
-	bet_amount = selected_bet.get()
-	if len(selected_numbers)<17:
-		if saldo >= bet_amount:
-			saldo -= bet_amount
-			puntata += bet_amount
-			selected_numbers[num] = selected_numbers.get(num, 0) + bet_amount
-			saldo_label.config(text=f"Saldo: {saldo} FUN")
-			puntata_label.config(text=f"Puntata totale: {puntata} FUN")
-			# Evidenzia il bottone selezionato
-			for btn in number_buttons:
-				if btn["text"] == str(num):
-					btn.config(bg="green")
-					btn.config(state="disabled")
-	else:
-		messagebox.showwarning("Saldo Insufficiente", "Non hai abbastanza FUN per piazzare questa puntata!")
-
-# Creazione bottoni per i numeri della roulette
 number_buttons = []
-for i in range(3):
-	for j in range(12):
-		num = i * 12 + j
-		if num > 36:
-			break
-		btn = tk.Button(table_frame, text=str(num), width=4, height=2, bg="red" if num % 2 else "black", fg="white",
-						 command=lambda n=num: place_bet(n))
-		btn.grid(row=i, column=j, padx=2, pady=2)
-		number_buttons.append(btn)
 
-# Aggiunta bottoni per scommesse speciali
+# Add 0 first as a large button
+zero_button = tk.Button(table_frame, text="0", width=6, height=6, bg="green", fg="white", command=lambda: place_bet(0))
+zero_button.grid(row=0, column=0, rowspan=3, padx=5, pady=5)
+number_buttons.append(zero_button)
+
+def place_bet(num):
+    global selected_numbers, saldo, puntata
+    bet_amount = selected_bet.get()
+    if len(selected_numbers) < 17:
+        if saldo >= bet_amount:
+            saldo -= bet_amount
+            puntata += bet_amount
+            selected_numbers[num] = selected_numbers.get(num, 0) + bet_amount
+            saldo_label.config(text=f"Saldo: {saldo} FUN")
+            puntata_label.config(text=f"Puntata totale: {puntata} FUN")
+            for btn in number_buttons:
+                if btn["text"] == str(num):
+                    btn.config(bg="green")
+                    btn.config(state="disabled")
+        else:
+            messagebox.showwarning("Saldo Insufficiente", "Non hai abbastanza FUN per piazzare questa puntata!")
+
+# Add numbers 1-36 in classic roulette layout
+layout = [
+    [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
+    [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35],
+    [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34],
+]
+
+for row_index, row in enumerate(layout):
+    for col_index, num in enumerate(row):
+        color = "red" if num in [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36] else "black"
+        btn = tk.Button(table_frame, text=str(num), width=4, height=2, bg=color, fg="white", command=lambda n=num: place_bet(n))
+        btn.grid(row=row_index, column=col_index+1, padx=2, pady=2)
+        number_buttons.append(btn)
 special_bets_frame_top = tk.Frame(right_frame, bg="black")
 special_bets_frame_top.pack(pady=10)
 
 special_bets_frame_bottom = tk.Frame(right_frame, bg="black")
 special_bets_frame_bottom.pack(pady=10)
 
-# Variabili per le scommesse speciali
 selected_red = tk.IntVar(value=0)
 selected_black = tk.IntVar(value=0)
 selected_even = tk.IntVar(value=0)
@@ -167,7 +166,6 @@ def place_special_bet(bet_type):
 	else:
 		messagebox.showwarning("Saldo Insufficiente", "Non hai abbastanza FUN per piazzare questa puntata!")
 
-# Bottoni per scommesse speciali
 red_button = tk.Button(special_bets_frame_top, text="Rosso", width=10, bg="red", fg="white", command=lambda: place_special_bet("red"))
 red_button.pack(side="left", padx=5)
 
@@ -186,9 +184,8 @@ low_button.pack(side="left", padx=5)
 high_button = tk.Button(special_bets_frame_bottom, text="19-36", width=10, bg="gray", fg="white", command=lambda: place_special_bet("high"))
 high_button.pack(side="left", padx=5)
 
-# Effetto di rotazione della roulette senza ingrandimento
-from PIL import Image  
-BICUBIC = Image.Resampling.BICUBIC  
+from PIL import Image
+BICUBIC = Image.Resampling.BICUBIC
 
 def rotate_roulette(angle=0, speed=50):
 	global roulette_img, resized_image
@@ -204,43 +201,45 @@ def rotate_roulette(angle=0, speed=50):
 	new_speed = max(speed - 1, 0)
 	root.after(50, lambda: rotate_roulette(angle + new_speed, new_speed))
 
-# Funzione per girare la ruota con animazione
 def gira_ruota():
 	play_sound()
 	rotate_roulette()
-	numero = random.randint(0, 36)
+	numero = random.choice(roulette_numbers)
 	root.after(5000, lambda: numero_uscito_label.config(text=f"Numero uscito: {numero}"))
 	root.after(5000, lambda: check_winnings(numero))
 
-# Controllo vincite
 def check_winnings(num):
 	global saldo, puntata, selected_numbers, selected_red, selected_black, selected_even, selected_odd, selected_low, selected_high
 	vincita_totale = 0
 
-	# Controllo vincite sui numeri
 	if num in selected_numbers:
 		vincita_totale += selected_numbers[num] * 35
 
-	# Controllo vincite su rosso/nero
-	if (num != 0 and num % 2 == 1 and selected_red.get() > 0) or (num != 0 and num % 2 == 0 and selected_black.get() > 0):
-		vincita_totale += selected_red.get() * 2 if num % 2 == 1 else selected_black.get() * 2
+	if num != 0:
+		if num in red_numbers:
+			vincita_totale += selected_red.get() * 2
+			
+		elif num in black_numbers:
+			vincita_totale += selected_black.get() * 2
 
-	# Controllo vincite su pari/dispari
-	if (num != 0 and num % 2 == 0 and selected_even.get() > 0) or (num != 0 and num % 2 == 1 and selected_odd.get() > 0):
-		vincita_totale += selected_even.get() * 2 if num % 2 == 0 else selected_odd.get() * 2
+		if num % 2 == 0:
+			vincita_totale += selected_even.get() * 2
+		else:
+			vincita_totale += selected_odd.get() * 2
 
-	# Controllo vincite su metà numeri
-	if (num >= 1 and num <= 18 and selected_low.get() > 0) or (num >= 19 and num <= 36 and selected_high.get() > 0):
-		vincita_totale += selected_low.get() * 2 if num <= 18 else selected_high.get() * 2
+		if 1 <= num <= 18:
+			vincita_totale += selected_low.get() * 2
+		elif 19 <= num <= 36:
+			vincita_totale += selected_high.get() * 2
 
 	if vincita_totale > 0:
 		saldo += vincita_totale
 		risultato_label.config(text=f"Vincita! Hai vinto {vincita_totale} FUN!", fg="yellow")
+		remove_coins(saldo+vincita_totale)
 	else:
 		risultato_label.config(text="Sconfitta! Non hai vinto questa volta!", fg="red")
 
-	remove_coins(saldo)  # Aggiorna il saldo nel file JSON
-	# Reset delle scommesse
+	remove_coins(saldo)
 	puntata = 0
 	selected_numbers = {}
 	selected_red.set(0)
@@ -251,10 +250,12 @@ def check_winnings(num):
 	selected_high.set(0)
 	saldo_label.config(text=f"Saldo: {saldo} FUN")
 	puntata_label.config(text=f"Puntata totale: {puntata} FUN")
-	# Ripristina il colore dei bottoni
+
 	for btn in number_buttons:
 		num = int(btn["text"])
-		btn.config(bg="red" if num % 2 else "black")
+		btn.config(bg="green" if num == 0 else ("red" if num in red_numbers else "black"))
+		btn.config(state="active")
+
 	red_button.config(bg="red")
 	black_button.config(bg="black")
 	even_button.config(bg="gray")
@@ -262,24 +263,16 @@ def check_winnings(num):
 	low_button.config(bg="gray")
 	high_button.config(bg="gray")
 
-	for btn in number_buttons:
-		btn.config(state="active")
-		
-
-# Pulsanti di controllo
 button_frame = tk.Frame(left_frame, bg="black")
 button_frame.pack(pady=10)
 
 gira_button = tk.Button(button_frame, text="Gira", command=gira_ruota, width=10, bg="gold")
 gira_button.pack(side="left", padx=10)
 
-# Label per il numero uscito (a sinistra)
 numero_uscito_label = tk.Label(left_frame, text="Numero uscito: ", font=("Helvetica", 16), fg="white", bg="black")
 numero_uscito_label.pack()
 
-# Label per il risultato (a destra, sotto i bottoni speciali)
 risultato_label = tk.Label(right_frame, text="", font=("Helvetica", 16), fg="white", bg="black")
 risultato_label.pack(side="bottom", pady=10)
 
-# Avvia il loop principale
 root.mainloop()
