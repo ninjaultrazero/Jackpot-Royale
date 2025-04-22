@@ -6,8 +6,7 @@ import subprocess
 import json
 
 pathFile = os.path.dirname(os.path.abspath(__file__))  # Percorso della cartella corrente
-from coin_manager import get_coins, add_coins
-coins=get_coins()  # Ottieni il saldo iniziale delle monete
+from coin_manager import get_balance, add_coins
 
 # Classe per l'animazione delle monete che cadono
 class FallingCoin:
@@ -52,6 +51,7 @@ def open_blackjack_window():
 	subprocess.run(['python', roulette_path])
 
 def start_casino():
+	coins = get_balance()
 	# Configurazione finestra principale
 	ctk.set_appearance_mode("dark")
 	ctk.set_default_color_theme("dark-blue")

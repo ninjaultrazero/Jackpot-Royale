@@ -8,8 +8,9 @@ import json
 import sys
 pathFile = os.path.dirname(os.path.abspath(__file__))  # Percorso della cartella corrente
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'login_and_main')))
-from coin_manager import get_coins, set_coins
-saldo = get_coins()  # Ottieni il saldo iniziale delle monete
+from coin_manager import get_balance, set_balance
+
+saldo = get_balance()  # Ottieni il saldo iniziale delle monete
 # Inizializza Pygame per il suono
 pygame.mixer.init()
 
@@ -262,7 +263,7 @@ def check_winnings(num):
 
 	for btn in number_buttons:
 		btn.config(state="active")
-set_coins(saldo)  # Aggiorna il saldo nel file JSON
+set_balance(saldo)  # Aggiorna il saldo nel file JSON
 		
 
 # Pulsanti di controllo

@@ -7,13 +7,20 @@ import time
 import os
 from customtkinter import CTkImage
 import json
+import tkinter.messagebox as msgbox  # <-- Aggiunto per messaggi d’errore
 
 # Importa la variabile globale per il saldo delle monete dal main
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'login_and_main')))
 
-from coin_manager import get_coins, set_coins
-coin_balance = get_coins()  # Ottieni il saldo iniziale delle monete
+from coin_manager import get_balance, set_balance
+
+# Ottieni il saldo iniziale delle monete con gestione dell'errore
+try:
+    coin_balance = get_balance()
+except ValueError as e:
+    msgbox.showerror("Errore", str(e))
+    sys.exit()  # Termina il programma se nessun utente è loggato
 
 # Init Pygame
 pygame.init()
@@ -76,7 +83,6 @@ def spin_reels():
         time.sleep(delay)
         spins[index] = 0
 
-
     for i in range(5):
         threading.Thread(target=stop_reel, args=(i, stop_times[i]), daemon=True).start()
 
@@ -93,7 +99,7 @@ def spin_reels():
 
 def check_win():
     spin_sound.stop()
-    
+
     if all(symbol == reel_values[0] for symbol in reel_values):
         pygame.mixer.Sound.play(win_sound)
         result_label.configure(text="🎉 JACKPOT! 🎉", text_color="green")
@@ -113,7 +119,6 @@ result_label = ctk.CTkLabel(root, text="", font=("Arial", 20))
 result_label.grid(row=1, column=0, pady=10)
 
 # Global lever state
-# Fallback spin button (optional)
 def lever_pulled(event):
     threading.Thread(target=spin_reels, daemon=True).start()
 
@@ -127,7 +132,7 @@ lever_frame.grid(row=0, column=1, padx=20, pady=20)
 lever = ctk.CTkSlider(lever_frame, from_=0, to=100, command=lever_pulled, orientation="vertical")
 lever.pack(expand=True, fill="y")
 
-# Aggiunta di un frame rettangolare per visualizzare il numero di monete
+# Coin display
 coin_frame = ctk.CTkFrame(root, fg_color="black", corner_radius=10, border_width=2, border_color="gold")
 coin_frame.place(relx=0.95, rely=0.05, anchor="ne")
 coin_label = ctk.CTkLabel(coin_frame, text=f"\U0001F4B0 {coin_balance}", font=("Helvetica", 18, "bold"), text_color="gold")
