@@ -175,7 +175,7 @@ def create_login(root, visitor_log_window, registration_status):
 			message_label.place(relx=0.5, rely=0.825, anchor="center")
 			return
 		
-		user_data = {"email": email, "password": password, "status": "user"}
+		user_data = {"email": email, "password": password, "status": "user", "balance": 1000}
 		try:
 			if not os.path.exists(json_path):
 				with open(json_path, "w") as file:
