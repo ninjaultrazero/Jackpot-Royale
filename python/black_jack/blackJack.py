@@ -1,186 +1,197 @@
 import customtkinter as ctk
-import os
+import pygame
 import random
-from tkinter import PhotoImage
-import json
+from PIL import Image, ImageTk
+import threading
+import time
+import os
+from customtkinter import CTkImage
+import tkinter.messagebox as msgbox
+import sys
 
-pathFile = os.path.dirname(os.path.abspath(__file__))  # Percorso della cartella corrente
+# Inizializzazione di pygame per i suoni
+pygame.mixer.init()
 
-# Funzione per leggere il saldo dal file JSON
-def get_balance():
-    with open('../login_and_main/users.json', 'r') as file:
-        data = json.load(file)
-        return data.get('balance', 0)
+# Percorso base delle immagini
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+IMMAGINI_PATH = os.path.join(BASE_DIR, "immagini")
 
-# Funzione per aggiornare il saldo nel file JSON
-def update_balance(new_balance):
-    with open('../login_and_main/users.json', 'r+') as file:
-        data = json.load(file)
-        data['balance'] = new_balance
-        file.seek(0)
-        json.dump(data, file, indent=4)
-        file.truncate()
+# Mappatura simboli dei semi alle cartelle e lettere nei nomi file
+SUIT_FOLDER_MAP = {
+    '♥': ('cuori', 'C'),
+    '♠': ('picche', 'P'),
+    '♦': ('quadri', 'Q'),
+    '♣': ('fiori', 'F'),
+}
 
-# Classe per il gioco Blackjack
-class BlackjackGame:
-	def __init__(self, root):
-		self.root = root
-		self.root.title("Blackjack")
-		
-		# Importa la variabile globale per il saldo delle monete
-		global coin_balance
-		self.player_credit = get_balance()
-		
-		self.player_hand = []
-		self.dealer_hand = []
-		self.deck = []
-		
-		self.create_ui()
-		self.start_game()
+# Mappatura dei rank speciali
+RANK_MAP = {
+    'A': '1',
+    'J': 'J',
+    'Q': 'Q',
+    'K': 'K'
+}
 
-	def create_ui(self):
-		# Sfondo verde per il tavolo da gioco
-		self.root.configure(bg="green")
+def get_deck():
+    ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+    suits = ['♠', '♥', '♦', '♣']
+    return [(rank, suit) for rank in ranks for suit in suits]
 
-		# Frame per le carte del giocatore e del mazziere
-		self.player_frame = ctk.CTkFrame(self.root, bg_color="green")
-		self.player_frame.pack(side="top", pady=20)
+def card_value(card):
+    rank, _ = card
+    if rank in ['J', 'Q', 'K']:
+        return 10
+    elif rank == 'A':
+        return 11
+    else:
+        return int(rank)
 
-		self.dealer_frame = ctk.CTkFrame(self.root, bg_color="green")
-		self.dealer_frame.pack(side="top", pady=20)
+def hand_value(hand):
+    value = sum(card_value(card) for card in hand)
+    aces = sum(1 for card in hand if card[0] == 'A')
+    while value > 21 and aces:
+        value -= 10
+        aces -= 1
+    return value
 
-		# Credito del giocatore in alto a destra
-		self.credit_label = ctk.CTkLabel(self.root, text=f"Credito: {self.player_credit}€", font=("Helvetica", 16), text_color="white", bg_color="green")
-		self.credit_label.place(relx=1.0, rely=0.0, anchor="ne", x=-20, y=20)  # Usa x e y per posizionamento con offset
+def load_card_images():
+    images = {}
+    for rank in ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']:
+        for suit_symbol in ['♠', '♥', '♦', '♣']:
+            folder, suit_letter = SUIT_FOLDER_MAP[suit_symbol]
+            rank_number = RANK_MAP.get(rank, rank)
+            filename = f"{rank_number}{suit_letter}.png"
+            image_path = os.path.join(IMMAGINI_PATH, folder, filename)
 
-		# Bottoni per le azioni
-		self.hit_button = ctk.CTkButton(self.root, text="Hit", command=self.hit, width=10)
-		self.hit_button.pack(side="left", padx=20, pady=10)
+            card_name = f"{rank}_{suit_symbol}"
+            if os.path.exists(image_path):
+                img = Image.open(image_path).resize((60, 90))
+                images[card_name] = ImageTk.PhotoImage(img)
+            else:
+                print(f"Warning: Missing image: {image_path}")
+    return images
 
-		self.stand_button = ctk.CTkButton(self.root, text="Stand", command=self.stand, width=10)
-		self.stand_button.pack(side="left", padx=20, pady=10)
+class BlackjackApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Blackjack")
+        self.root.geometry("700x500")
 
-		self.new_game_button = ctk.CTkButton(self.root, text="New Game", command=self.new_game, width=12)
-		self.new_game_button.pack(side="left", padx=20, pady=10)
+        self.deck = get_deck()
+        self.player_hand = []
+        self.dealer_hand = []
+        self.card_images = load_card_images()
 
-		self.bet_button = ctk.CTkButton(self.root, text="Place Bet", command=self.place_bet, width=12)
-		self.bet_button.pack(side="left", padx=20, pady=10)
+        self.title_label = ctk.CTkLabel(self.root, text="Blackjack Game", font=("Arial", 24))
+        self.title_label.pack(pady=20)
 
-	def load_deck(self):
-		# Caricamento delle immagini delle carte
-		suits = ['CUORI', 'FIORI', 'PICCHE', 'QUADRI']
-		ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
-		
-		# Costruzione del mazzo con il percorso delle immagini
-		return [f"img carte/{suit}/{rank}{suit[0]}.png" for suit in suits for rank in ranks]
+        self.player_hand_label = ctk.CTkLabel(self.root, text="Player's Hand:")
+        self.player_hand_label.pack(pady=5)
 
-	def update_display(self):
-		# Rimuove le vecchie carte dai frame
-		for widget in self.player_frame.winfo_children():
-			widget.destroy()
-		for widget in self.dealer_frame.winfo_children():
-			widget.destroy()
+        self.player_hand_frame = ctk.CTkFrame(self.root)
+        self.player_hand_frame.pack(pady=10)
 
-		# Visualizza le carte del giocatore
-		for card in self.player_hand:
-			img = PhotoImage(file=os.path.join(pathFile, card))  # Usa il percorso corretto per il file immagine
-			label = ctk.CTkLabel(self.player_frame, image=img, text="")
-			label.image = img  # Mantieni una referenza all'immagine
-			label.pack(side="left", padx=5)
+        self.dealer_hand_label = ctk.CTkLabel(self.root, text="Dealer's Hand:")
+        self.dealer_hand_label.pack(pady=5)
 
-		# Visualizza le carte del mazziere
-		for card in self.dealer_hand:
-			img = PhotoImage(file=os.path.join(pathFile, card))  # Usa il percorso corretto per il file immagine
-			label = ctk.CTkLabel(self.dealer_frame, image=img, text="")
-			label.image = img  # Mantieni una referenza all'immagine
-			label.pack(side="left", padx=5)
+        self.dealer_hand_frame = ctk.CTkFrame(self.root)
+        self.dealer_hand_frame.pack(pady=10)
 
-	def deal_cards(self):
-		# Distribuisci 2 carte al giocatore e al mazziere
-		self.player_hand = [self.deck.pop(), self.deck.pop()]
-		self.dealer_hand = [self.deck.pop(), self.deck.pop()]
-		self.update_display()
+        self.button_frame = ctk.CTkFrame(self.root)
+        self.button_frame.pack(pady=20)
 
-	def hit(self):
-		# Aggiungi una carta al giocatore
-		if len(self.deck) > 0:
-			self.player_hand.append(self.deck.pop())
-			self.update_display()
+        self.hit_button = ctk.CTkButton(self.button_frame, text="Hit", command=self.hit)
+        self.hit_button.pack(side="left", padx=20)
 
-	def stand(self):
-		# Gestisce il turno del mazziere
-		while self.calculate_hand_value(self.dealer_hand) < 17:
-			if len(self.deck) > 0:
-				self.dealer_hand.append(self.deck.pop())
-		self.update_display()
+        self.stand_button = ctk.CTkButton(self.button_frame, text="Stand", command=self.stand)
+        self.stand_button.pack(side="left", padx=20)
 
-		# Concludi la partita
-		self.end_game()
+        self.reset_button = ctk.CTkButton(self.button_frame, text="Reset", command=self.reset_game)
+        self.reset_button.pack(side="left", padx=20)
 
-	def place_bet(self):
-		# Per semplicità, facciamo un betting fisso (modifica a piacere)
-		bet = 10  # Sostituisci con un valore di scommessa
-		if self.player_credit >= bet:
-			self.player_credit -= bet
-			self.credit_label.config(text=f"Credito: {self.player_credit}€")
-			self.start_game()
-		else:
-			self.show_message("Non hai abbastanza credito!")
+        self.reset_game()
 
-	def new_game(self):
-		self.start_game()
+    def reset_game(self):
+        self.deck = get_deck()
+        random.shuffle(self.deck)
+        self.player_hand = [self.deck.pop(), self.deck.pop()]
+        self.dealer_hand = [self.deck.pop(), self.deck.pop()]
 
-	def start_game(self):
-		# Avvia il gioco e distribuisci le carte
-		self.deck = self.load_deck()
-		random.shuffle(self.deck)
-		self.deal_cards()
+        self.update_ui()
+        self.dealer_hand_label.configure(text="Dealer's Hand:")
+        self.hit_button.configure(state="normal")
+        self.stand_button.configure(state="normal")
 
-	def calculate_hand_value(self, hand):
-		# Calcola il valore della mano (semplificato)
-		value = 0
-		ace_count = 0
-		for card in hand:
-			rank = card.split('/')[-1][0]  # Estrai il rango (ad esempio, "2", "J", "K")
-			if rank in ['J', 'Q', 'K']:
-				value += 10
-			elif rank == 'A':
-				ace_count += 1
-				value += 11  # Trattiamo l'asso come 11
-			else:
-				value += int(rank)
-		
-		# Se ci sono assi e il valore è maggiore di 21, trattiamo l'asso come 1
-		while value > 21 and ace_count:
-			value -= 10
-			ace_count -= 1
-		return value
+    def update_ui(self):
+        for widget in self.player_hand_frame.winfo_children():
+            widget.destroy()
+        for widget in self.dealer_hand_frame.winfo_children():
+            widget.destroy()
 
-	def end_game(self):
-		# Determina il vincitore e aggiorna il credito
-		player_value = self.calculate_hand_value(self.player_hand)
-		dealer_value = self.calculate_hand_value(self.dealer_hand)
+        for card in self.player_hand:
+            card_name = f"{card[0]}_{card[1]}"
+            card_image = self.card_images.get(card_name)
+            card_label = ctk.CTkLabel(self.player_hand_frame, image=card_image)
+            card_label.image = card_image
+            card_label.pack(side="left", padx=5)
 
-		if player_value > 21:
-			self.show_message("Hai sballato! Hai perso.")
-		elif dealer_value > 21 or player_value > dealer_value:
-			self.show_message("Hai vinto!")
-			self.player_credit += 20  # Aggiungi un premio
-		elif player_value < dealer_value:
-			self.show_message("Il mazziere ha vinto!")
-		else:
-			self.show_message("Pareggio!")
-		
-		# Mostra il nuovo credito
-		self.credit_label.config(text=f"Credito: {self.player_credit}€")
+        for i, card in enumerate(self.dealer_hand):
+            if i == 0:
+                card_name = f"{card[0]}_{card[1]}"
+                card_image = self.card_images.get(card_name)
+                card_label = ctk.CTkLabel(self.dealer_hand_frame, image=card_image)
+                card_label.image = card_image
+                card_label.pack(side="left", padx=5)
+            else:
+                back_label = ctk.CTkLabel(self.dealer_hand_frame, text="🂠", font=("Arial", 30))
+                back_label.pack(side="left", padx=5)
 
-	def show_message(self, message):
-		# Mostra un messaggio a schermo
-		message_label = ctk.CTkLabel(self.root, text=message, font=("Helvetica", 16), text_color="yellow", bg_color="green")
-		message_label.place(relx=0.5, rely=0.5, anchor="center")
-		self.root.after(2000, message_label.destroy)  # Rimuovi il messaggio dopo 2 secondi
+    def hit(self):
+        self.player_hand.append(self.deck.pop())
+        self.update_ui()
 
-# Configurazione dell'interfaccia Tkinter
-root = ctk.CTk()
-game = BlackjackGame(root)
-root.mainloop()
+        if hand_value(self.player_hand) > 21:
+            msgbox.showinfo("Bust!", "You busted! Dealer wins.")
+            self.end_game()
+
+    def stand(self):
+        while hand_value(self.dealer_hand) < 17:
+            self.dealer_hand.append(self.deck.pop())
+
+        self.show_full_dealer_hand()
+
+        player_score = hand_value(self.player_hand)
+        dealer_score = hand_value(self.dealer_hand)
+
+        if dealer_score > 21 or player_score > dealer_score:
+            msgbox.showinfo("You Win!", "You win!")
+        elif dealer_score == player_score:
+            msgbox.showinfo("Push", "It's a tie!")
+        else:
+            msgbox.showinfo("Dealer Wins", "Dealer wins!")
+
+        self.end_game()
+
+    def show_full_dealer_hand(self):
+        for widget in self.dealer_hand_frame.winfo_children():
+            widget.destroy()
+
+        for card in self.dealer_hand:
+            card_name = f"{card[0]}_{card[1]}"
+            card_image = self.card_images.get(card_name)
+            card_label = ctk.CTkLabel(self.dealer_hand_frame, image=card_image)
+            card_label.image = card_image
+            card_label.pack(side="left", padx=5)
+
+    def end_game(self):
+        self.hit_button.configure(state="disabled")
+        self.stand_button.configure(state="disabled")
+        self.reset_button.configure(state="normal")
+
+def main():
+    root = ctk.CTk()
+    app = BlackjackApp(root)
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()

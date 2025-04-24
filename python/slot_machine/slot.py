@@ -1,89 +1,92 @@
 import customtkinter as ctk
 import pygame
 import random
-from PIL import Image
+from PIL import Image, ImageTk
 import threading
 import time
 import os
 from customtkinter import CTkImage
 import json
 import tkinter.messagebox as msgbox
-
-# Importa la variabile globale per il saldo delle monete dal main
 import sys
+
+# Percorsi
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'login_and_main')))
 from coin_manager import get_balance, remove_coins
 
-# Ottieni il saldo iniziale delle monete con gestione dell'errore
+# Ottieni il saldo iniziale
 try:
     coin_balance = get_balance()
 except ValueError as e:
     msgbox.showerror("Errore", str(e))
     sys.exit()
 
-# Variabile per la scommessa selezionata
 selected_bet = 1
 
 # Init Pygame
 pygame.init()
 pygame.mixer.init()
 
-# Paths
 pathFile = os.path.dirname(os.path.abspath(__file__))
 images_path = os.path.join(pathFile, "./immagini")
 
-# Sounds
+# Suoni
 spin_sound = pygame.mixer.Sound(os.path.join(pathFile, "spin.mp3"))
 win_sound = pygame.mixer.Sound(os.path.join(pathFile, "win.mp3"))
 spin_sound.set_volume(0.5)
 win_sound.set_volume(0.5)
 
-# Load image symbols
+# Simboli
 symbol_files = ["cherry.png", "bell.png", "lemon.png", "star.png", "watermelon.png", "seven.png", "diamond.png"]
 symbols_images = [Image.open(os.path.join(images_path, f)).resize((60, 60)) for f in symbol_files]
 symbols = [CTkImage(light_image=img, size=(60, 60)) for img in symbols_images]
 
-# UI setup
+# UI Setup
 root = ctk.CTk()
 root.title("Slot Machine")
 root.geometry("800x600")
 ctk.set_appearance_mode("dark")
 
-# Main frame (using grid for both reels and lever)
-main_frame = ctk.CTkFrame(root)
-main_frame.grid(row=0, column=0, padx=20, pady=20)
+# Background
+slot_bg = Image.open(os.path.join(images_path, "GIGIYX.1 (2).png")).resize((800, 600))
+slot_bg_img = ImageTk.PhotoImage(slot_bg)
+background_label = ctk.CTkLabel(root, image=slot_bg_img, text="")
+background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
-# Reels frame
+# Frame principale
+main_frame = ctk.CTkFrame(root, fg_color="transparent")
+main_frame.place(relx=0.5, rely=0.4, anchor="center")
+
+# Reels
 reels_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
 reels_frame.grid(row=0, column=0, padx=20)
 
-# Reel containers
 reels = []
 reel_values = []
 for i in range(5):
     frame = ctk.CTkFrame(reels_frame, fg_color="white", border_color="black", border_width=3, width=80, height=100)
     frame.pack_propagate(False)
-    frame.grid(row=0, column=i, padx=10)
+    frame.grid(row=0, column=i, padx=5)
     symbol = random.choice(symbols)
     label = ctk.CTkLabel(frame, text="", image=symbol, text_color="black")
     label.pack(expand=True)
     reels.append(label)
     reel_values.append(symbol)
 
-# Coin display
+# Monete nel riquadro nero
 coin_frame = ctk.CTkFrame(root, fg_color="black", corner_radius=10, border_width=2, border_color="gold")
-coin_frame.place(relx=0.95, rely=0.05, anchor="ne")
+coin_frame.place(relx=0.5, rely=0.83, anchor="center")
 coin_label = ctk.CTkLabel(coin_frame, text=f"\U0001F4B0 {coin_balance}", font=("Helvetica", 18, "bold"), text_color="gold")
 coin_label.pack(padx=10, pady=5)
 
 def update_coin_label():
     coin_label.configure(text=f"\U0001F4B0 {coin_balance}")
 
-# Result label
+# Risultato
 result_label = ctk.CTkLabel(root, text="", font=("Arial", 20))
-result_label.grid(row=1, column=0, pady=10)
+result_label.place(relx=0.5, rely=0.75, anchor="center")
 
-# Bet selection
+# Scommessa
 bet_frame = ctk.CTkFrame(root)
 bet_frame.place(relx=0.5, rely=0.92, anchor="center")
 
@@ -99,7 +102,7 @@ for amount in [1, 10, 25, 50, 100]:
     btn = ctk.CTkButton(bet_frame, text=str(amount), width=40, command=lambda a=amount: set_bet(a))
     btn.pack(side="left", padx=5)
 
-# Global spin state
+# Stato globale
 running = False
 
 def spin_reels():
@@ -112,10 +115,12 @@ def spin_reels():
         msgbox.showwarning("Saldo insufficiente", "Non hai abbastanza monete per questa scommessa.")
         return
 
+    running = True
+    lever.configure(state="disabled")
+
     coin_balance -= selected_bet
     update_coin_label()
 
-    running = True
     spin_sound.play(0, 0)
 
     spins = [random.randint(10, 20) for _ in range(5)]
@@ -166,21 +171,36 @@ def check_win():
         update_coin_label()
 
     remove_coins(coin_balance)
-    reset_lever()
 
-# Lever behavior
-def lever_pulled(event):
-    threading.Thread(target=spin_reels, daemon=True).start()
-
-def reset_lever():
+    lever.configure(state="normal")
     lever.set(100)
 
-# Lever (slider)
-lever_frame = ctk.CTkFrame(main_frame)
-lever_frame.grid(row=0, column=1, padx=20, pady=20)
+# Leva
+lever_frame = ctk.CTkFrame(root, fg_color="transparent")
+lever_frame.place(relx=0.88, rely=0.38, anchor="center")
 
-lever = ctk.CTkSlider(lever_frame, from_=0, to=100, command=lever_pulled, orientation="vertical")
-lever.pack(expand=True, fill="y")
+red_dot = ctk.CTkLabel(lever_frame, text="🔴", font=("Arial", 18))
+red_dot.pack(pady=(10, 5))
+
+def lever_pulled(value):
+    if running:
+        return
+    if value < 10:
+        lever.configure(state="disabled")
+        threading.Thread(target=spin_reels, daemon=True).start()
+
+lever = ctk.CTkSlider(
+    lever_frame,
+    from_=0,
+    to=100,
+    orientation="vertical",
+    number_of_steps=100,
+    command=lever_pulled,
+    width=40,
+    height=150
+)
+lever.set(100)
+lever.pack()
 
 # Main loop
 root.mainloop()
