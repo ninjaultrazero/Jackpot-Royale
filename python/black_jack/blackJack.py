@@ -198,6 +198,7 @@ class BlackjackApp:
             self.player_coins -= self.bet
         
         remove_coins(self.player_coins)
+        ciao=1
         self.end_game()
 
     def show_full_dealer_hand(self):
