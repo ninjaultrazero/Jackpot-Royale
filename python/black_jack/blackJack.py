@@ -8,23 +8,25 @@ import os
 from customtkinter import CTkImage
 import tkinter.messagebox as msgbox
 import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'login_and_main')))
+from coin_manager import get_balance, remove_coins
 
-# Inizializzazione di pygame per i suoni
+
+# Inizializzazione di pygame solo per font e suoni
 pygame.mixer.init()
+pygame.font.init()
 
 # Percorso base delle immagini
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 IMMAGINI_PATH = os.path.join(BASE_DIR, "immagini")
 
-# Mappatura simboli dei semi alle cartelle e lettere nei nomi file
+# Mappature semi e rank
 SUIT_FOLDER_MAP = {
     '♥': ('cuori', 'C'),
     '♠': ('picche', 'P'),
     '♦': ('quadri', 'Q'),
     '♣': ('fiori', 'F'),
 }
-
-# Mappatura dei rank speciali
 RANK_MAP = {
     'A': '1',
     'J': 'J',
@@ -75,24 +77,41 @@ class BlackjackApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Blackjack")
-        self.root.geometry("700x500")
+        self.root.geometry("800x600")
+        # Ottieni il saldo iniziale
+        try:
+            self.player_coins = get_balance()
+        except ValueError as e:
+            msgbox.showerror("Errore", str(e))
+            sys.exit()
+        self.bet = 100  # Puoi farlo modificabile poi
 
         self.deck = get_deck()
         self.player_hand = []
         self.dealer_hand = []
         self.card_images = load_card_images()
 
-        self.title_label = ctk.CTkLabel(self.root, text="Blackjack Game", font=("Arial", 24))
-        self.title_label.pack(pady=20)
+        # Font Pygame per "Blackjack" scritto grande
+        self.blackjack_font = pygame.font.SysFont('comicsansms', 60)
 
-        self.player_hand_label = ctk.CTkLabel(self.root, text="Player's Hand:")
-        self.player_hand_label.pack(pady=5)
+        # Etichetta principale (Blackjack scritta grande simulata)
+        self.blackjack_label = ctk.CTkLabel(self.root, text="BLACKJACK", font=("Comic Sans MS", 50, "bold"), text_color="gold")
+        self.blackjack_label.pack(pady=10)
+
+        self.coins_label = ctk.CTkLabel(self.root, text=f"Monete: {self.player_coins}", font=("Arial", 18))
+        self.coins_label.pack(pady=5)
+
+        self.bet_label = ctk.CTkLabel(self.root, text=f"Puntata: {self.bet}", font=("Arial", 18))
+        self.bet_label.pack(pady=5)
+
+        self.player_score_label = ctk.CTkLabel(self.root, text="Punteggio Giocatore: 0", font=("Arial", 18))
+        self.player_score_label.pack(pady=5)
+
+        self.dealer_score_label = ctk.CTkLabel(self.root, text="Punteggio Banco: ?", font=("Arial", 18))
+        self.dealer_score_label.pack(pady=5)
 
         self.player_hand_frame = ctk.CTkFrame(self.root)
         self.player_hand_frame.pack(pady=10)
-
-        self.dealer_hand_label = ctk.CTkLabel(self.root, text="Dealer's Hand:")
-        self.dealer_hand_label.pack(pady=5)
 
         self.dealer_hand_frame = ctk.CTkFrame(self.root)
         self.dealer_hand_frame.pack(pady=10)
@@ -118,7 +137,6 @@ class BlackjackApp:
         self.dealer_hand = [self.deck.pop(), self.deck.pop()]
 
         self.update_ui()
-        self.dealer_hand_label.configure(text="Dealer's Hand:")
         self.hit_button.configure(state="normal")
         self.stand_button.configure(state="normal")
 
@@ -146,12 +164,18 @@ class BlackjackApp:
                 back_label = ctk.CTkLabel(self.dealer_hand_frame, text="🂠", font=("Arial", 30))
                 back_label.pack(side="left", padx=5)
 
+        self.player_score_label.configure(text=f"Punteggio Giocatore: {hand_value(self.player_hand)}")
+        self.dealer_score_label.configure(text=f"Punteggio Banco: ?")
+        self.coins_label.configure(text=f"Monete: {self.player_coins}")
+        self.bet_label.configure(text=f"Puntata: {self.bet}")
+
     def hit(self):
         self.player_hand.append(self.deck.pop())
         self.update_ui()
 
         if hand_value(self.player_hand) > 21:
-            msgbox.showinfo("Bust!", "You busted! Dealer wins.")
+            msgbox.showinfo("Bust!", "Hai sballato! Il banco vince.")
+            self.player_coins -= self.bet
             self.end_game()
 
     def stand(self):
@@ -164,12 +188,16 @@ class BlackjackApp:
         dealer_score = hand_value(self.dealer_hand)
 
         if dealer_score > 21 or player_score > dealer_score:
-            msgbox.showinfo("You Win!", "You win!")
+            msgbox.showinfo("Vittoria!", "Hai vinto!")
+            self.player_coins += self.bet
         elif dealer_score == player_score:
-            msgbox.showinfo("Push", "It's a tie!")
+            msgbox.showinfo("Pareggio", "Pareggio!")
+            # Nessuna variazione monete
         else:
-            msgbox.showinfo("Dealer Wins", "Dealer wins!")
-
+            msgbox.showinfo("Banco Vince", "Il banco vince.")
+            self.player_coins -= self.bet
+        
+        remove_coins(self.player_coins)
         self.end_game()
 
     def show_full_dealer_hand(self):
@@ -183,10 +211,12 @@ class BlackjackApp:
             card_label.image = card_image
             card_label.pack(side="left", padx=5)
 
+        self.dealer_score_label.configure(text=f"Punteggio Banco: {hand_value(self.dealer_hand)}")
+
     def end_game(self):
         self.hit_button.configure(state="disabled")
         self.stand_button.configure(state="disabled")
-        self.reset_button.configure(state="normal")
+        self.coins_label.configure(text=f"Monete: {self.player_coins}")
 
 def main():
     root = ctk.CTk()
