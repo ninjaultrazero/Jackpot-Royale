@@ -22,6 +22,7 @@ venv\Scripts\activate  # Su Windows
 
 ### 3⃣ Installa le dipendenze richieste
 ```bash
+python -m pip install pip --upgrade
 pip install -r requirements.txt
 ```
 

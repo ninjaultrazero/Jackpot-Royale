@@ -15,6 +15,12 @@
         "email": "pako@gmail.com",
         "password": "123456",
         "status": "user",
+        "balance": 900
+    },
+    {
+        "email": "peppe_anto@gmail.com",
+        "password": "Messigno",
+        "status": "user",
         "balance": 1000
     }
 ]
