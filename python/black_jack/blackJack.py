@@ -131,6 +131,9 @@ class BlackjackApp:
 
         self.reset_button = ctk.CTkButton(self.button_frame, text="Reset", width=100, command=self.reset_game)
         self.reset_button.pack(side="left", padx=20)
+        
+        self.home_button = ctk.CTkButton(self.button_frame, text="Torna alla Home", command=self.torna_alla_home)
+        self.home_button.pack(side="left", padx=20)
 
         # Add betting buttons
         self.bet_button_frame = ctk.CTkFrame(self.root, fg_color="#1A3B2A")
@@ -238,6 +241,9 @@ class BlackjackApp:
         self.hit_button.configure(state="disabled")
         self.stand_button.configure(state="disabled")
         self.coins_label.configure(text=f"Monete: {self.player_coins}")
+    def torna_alla_home(self):
+        home_path = os.path.join(os.path.dirname(__file__), '..', 'login_and_main', 'main.py')
+        os.execl(sys.executable, sys.executable, home_path)
 
 def main():
     root = ctk.CTk()

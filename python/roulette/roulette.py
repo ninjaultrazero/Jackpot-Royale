@@ -275,4 +275,15 @@ numero_uscito_label.pack()
 risultato_label = tk.Label(right_frame, text="", font=("Helvetica", 16), fg="white", bg="black")
 risultato_label.pack(side="bottom", pady=10)
 
+def avvia_roulette():
+    roulette_path = os.path.join(os.path.dirname(__file__), "..", "roulette_game", "roulette.py")
+    os.execl(sys.executable, sys.executable, roulette_path)
+
+def torna_alla_home():
+    main_path = os.path.join(pathFile, "..", "login_and_main", "main.py")
+    os.execl(sys.executable, sys.executable, main_path)
+
+
+home_button = tk.Button(button_frame, text="Torna alla Home", command=torna_alla_home, width=15, bg="gray", fg="white")
+home_button.pack(side="left", padx=10)
 root.mainloop()

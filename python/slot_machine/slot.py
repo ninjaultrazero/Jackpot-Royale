@@ -31,7 +31,7 @@ pathFile = os.path.dirname(os.path.abspath(__file__))
 images_path = os.path.join(pathFile, "./immagini")
 
 # Suoni
-spin_sound = pygame.mixer.Sound(os.path.join(pathFile, "spin.mp3"))
+spin_sound = pygame.mixer.Sound(os.path.join(pathFile, "spin (mp3cut.net).mp3"))
 win_sound = pygame.mixer.Sound(os.path.join(pathFile, "win.mp3"))
 spin_sound.set_volume(0.5)
 win_sound.set_volume(0.5)
@@ -187,6 +187,8 @@ def lever_pulled(value):
         return
     if value < 10:
         lever.configure(state="disabled")
+        # Avvia il suono quando la leva scende sotto la soglia
+        spin_sound.play(0, 0)
         threading.Thread(target=spin_reels, daemon=True).start()
 
 lever = ctk.CTkSlider(
@@ -201,6 +203,34 @@ lever = ctk.CTkSlider(
 )
 lever.set(100)
 lever.pack()
+
+import os
+import sys
+import tkinter as tk
+
+# Funzione per avviare la slot machine
+def avvia_slot():
+    slot_path = os.path.join(os.path.dirname(__file__), "..", "slot_machine", "slot.py")
+    os.execl(sys.executable, sys.executable, slot_path)
+
+
+# Bottone per tornare alla Home
+def torna_alla_home():
+    home_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'login_and_main', 'main.py'))
+    root.destroy()
+    os.execl(sys.executable, sys.executable, home_path)
+
+home_button = ctk.CTkButton(
+    root,
+    text="🏠 Torna alla Home",
+    font=("Helvetica", 14, "bold"),
+    text_color="white",
+    fg_color="#333",
+    hover_color="#555",
+    corner_radius=10,
+    command=torna_alla_home
+)
+home_button.place(relx=0.05, rely=0.05)  # Regola la posizione a tuo piacimento
 
 # Main loop
 root.mainloop()
