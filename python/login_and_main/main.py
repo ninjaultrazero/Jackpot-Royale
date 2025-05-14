@@ -60,7 +60,6 @@ def start_casino():
 	root.title("Jackpot Royale")
 	root.state('zoomed')  # Mantiene la finestra massimizzata
 	root.resizable(False, False)
-	coins = 1000
 
 	# Carica e imposta lo sfondo
 	bg_image = ctk.CTkImage(light_image=Image.open(f"{pathFile}/immagini/casino_bg.png"), dark_image=Image.open(f"{pathFile}/immagini/casino_bg.png"), size=(1920, 1080))
