@@ -10,7 +10,7 @@ import sys
 pathFile = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'login_and_main')))
 from coin_manager import get_balance, remove_coins
-
+ctk.set_appearance_mode("dark")
 saldo = get_balance()
 pygame.mixer.init()
 roulette_numbers = [

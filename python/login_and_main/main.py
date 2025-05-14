@@ -6,7 +6,7 @@ import sys
 
 pathFile = os.path.dirname(os.path.abspath(__file__))
 from coin_manager import get_balance
-
+ctk.set_appearance_mode("dark")
 # Classe per l'animazione delle monete
 class FallingCoin:
     def __init__(self, root):

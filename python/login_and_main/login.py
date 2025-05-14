@@ -11,7 +11,7 @@ from session import set_logged_user
 pathFile = os.path.dirname(os.path.abspath(__file__))  
 json_path = os.path.join(pathFile, "users.json") 
 
-
+ctk.set_appearance_mode("dark")
 # ----------------------- UTILS -----------------------
 
 def window_login_geometry(window):

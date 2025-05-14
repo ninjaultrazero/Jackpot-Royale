@@ -11,7 +11,7 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'login_and_main')))
 from coin_manager import get_balance, remove_coins
-
+ctk.set_appearance_mode("dark")
 pygame.mixer.init()
 pygame.font.init()
 

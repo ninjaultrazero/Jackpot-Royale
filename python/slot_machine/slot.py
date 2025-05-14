@@ -13,7 +13,7 @@ import sys
 # Percorsi
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'login_and_main')))
 from coin_manager import get_balance, remove_coins
-
+ctk.set_appearance_mode("dark")
 # Ottieni il saldo iniziale
 try:
     coin_balance = get_balance()
