@@ -37,14 +37,10 @@ def set_balance(new_balance):
     if not user_found:
         raise ValueError("Utente non trovato.")
     
-    # Stampa di debug
-    print(f"Aggiornato saldo dell'utente {email} a {new_balance}")
     
     with open(COINS_PATH, "w") as file:
         json.dump(users, file, indent=4)
 
-    # Stampa di conferma
-    print(f"File JSON aggiornato: {json.dumps(users, indent=4)}")
 
 
 def add_coins(amount):
